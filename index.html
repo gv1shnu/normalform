@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f7f9fc">
   <meta name="description" content="An interactive, seeded walkthrough from unnormalized data to fifth normal form.">
   <title>Normal Form — Database Normalization Visualiser</title>
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308131f'/%3E%3Cellipse cx='32' cy='18' rx='19' ry='8' fill='%234ee1b2'/%3E%3Cpath d='M13 18v14c0 4 9 8 19 8s19-4 19-8V18M13 32v14c0 4 9 8 19 8s19-4 19-8V32' fill='none' stroke='%23f4f7f5' stroke-width='5'/%3E%3C/svg%3E">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23162033'/%3E%3Cellipse cx='32' cy='18' rx='19' ry='8' fill='%232f6fed'/%3E%3Cpath d='M13 18v14c0 4 9 8 19 8s19-4 19-8V18M13 32v14c0 4 9 8 19 8s19-4 19-8V32' fill='none' stroke='%23f4f7f5' stroke-width='5'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
   <script src="app.js" defer></script>
 </head>
@@ -29,7 +29,7 @@
     <section class="intro" aria-labelledby="pageTitle">
       <div class="eyebrow">Database normalization visualiser</div>
       <h1 id="pageTitle">See normalization happen.</h1>
-      <p>Follow one Campus Connect database from a messy student spreadsheet to a clean 5NF design.</p>
+      <p>Follow one Campus Connect database from a messy student spreadsheet to 5NF. Every outcome becomes the next step’s input.</p>
       <div class="intro-meta" aria-label="Journey summary">
         <span><b>7</b> normal forms</span>
         <span><b>1</b> campus case study</span>
@@ -41,7 +41,8 @@
       <ol id="progress" class="progress-list"></ol>
     </nav>
 
-    <section id="journey" class="journey" aria-live="polite" aria-label="Normalization stages"></section>
+    <p id="statusAnnouncer" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+    <section id="journey" class="journey" aria-label="Normalization stages"></section>
 
     <div class="controls" aria-label="Journey controls">
       <button id="backButton" class="button button-secondary" type="button">◂ Back</button>
@@ -51,8 +52,11 @@
   </main>
 
   <footer>
-    <span>Normal Form</span>
-    <span>A visual guide to better relational design.</span>
+    <a class="footer-github" href="https://github.com/gv1shnu/normalform" target="_blank" rel="noreferrer" aria-label="View Normal Form on GitHub">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .7a11.5 11.5 0 0 0-3.64 22.41c.58.11.79-.25.79-.56v-2.24c-3.22.7-3.9-1.37-3.9-1.37-.52-1.34-1.28-1.69-1.28-1.69-1.05-.72.08-.71.08-.71 1.16.09 1.77 1.19 1.77 1.19 1.03 1.77 2.7 1.26 3.36.96.1-.75.4-1.26.73-1.55-2.57-.29-5.27-1.29-5.27-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.47.11-3.05 0 0 .97-.31 3.16 1.18a10.98 10.98 0 0 1 5.76 0c2.19-1.49 3.15-1.18 3.15-1.18.63 1.58.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.4-2.71 5.38-5.29 5.67.42.36.79 1.07.79 2.16v3.21c0 .31.21.68.8.56A11.5 11.5 0 0 0 12 .7Z"/></svg>
+    </a>
+    <a class="footer-credit" href="https://vishnugandarapu.in" target="_blank" rel="noreferrer">Designed by Vishnu Gandarapu</a>
+    <span class="footer-note">A visual guide to relational design.</span>
   </footer>
 </body>
 </html>
