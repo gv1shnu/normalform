@@ -1,6 +1,6 @@
 # Database Normalization Visualiser
 
-An interactive, single-page walkthrough that carries one Campus Connect student database from UNF through 5NF. Each stage appends below the last, with seeded sample data, highlighted dependencies, explicit primary-key labels, responsive HTML tables, and keyboard-friendly controls.
+An interactive, single-page walkthrough that carries one Campus Connect student database from UNF through 5NF. Every stage shows the complete input and outcome database, and each outcome becomes the next stage’s exact input. The app includes seeded sample data, highlighted dependencies, explicit primary-key labels, responsive HTML tables, and keyboard-friendly controls.
 
 ## Run locally
 
@@ -11,6 +11,12 @@ python3 -m http.server 8000
 ```
 
 Then visit `http://localhost:8000`.
+
+Run the deterministic data and decomposition checks with:
+
+```bash
+node selftest.js
+```
 
 ## Publish with GitHub Pages
 
