@@ -1,6 +1,6 @@
 # Database Normalization Visualiser
 
-An interactive, single-page walkthrough from UNF through 5NF. Each stage uses a small, familiar example and appends below the last, with seeded sample data, highlighted dependencies, responsive HTML tables, and keyboard-friendly controls.
+An interactive, single-page walkthrough that carries one Campus Connect student database from UNF through 5NF. Each stage appends below the last, with seeded sample data, highlighted dependencies, explicit primary-key labels, responsive HTML tables, and keyboard-friendly controls.
 
 ## Run locally
 
