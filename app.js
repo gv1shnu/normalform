@@ -97,12 +97,11 @@ function renderStage(index) {
   const m = model;
   if (index === 0) {
     const before = `<div class="tables-grid">${table("Student_Spreadsheet", ["StudentID","StudentName","Clubs"], m.unfStudents, { bad:[2], key:[0], wide:true })}</div>`;
-    return stage(index, "UNF", "A cell should not contain a list", lesson(before, "The Clubs cell holds several values. Searching or updating just one club is awkward.", "StudentID → {Clubs} (repeating group)", "Give each club membership its own row. The next step shows the result."));
+    return stage(index, "UNF", "The starting point: a repeating group inside one cell", `<section class="lesson-step"><span class="phase-kicker problem">Starting table</span>${before}<div class="compact-callout problem"><strong>Why unnormalized?</strong> The Clubs cell contains a repeating group.</div>${dependency("StudentID → {Clubs} (repeating group)")}</section>`);
   }
   if (index === 1) {
-    const before = `<div class="tables-grid">${table("Student_Spreadsheet", ["StudentID","StudentName","Clubs"], m.unfStudents, { bad:[2], key:[0], wide:true })}</div>`;
     const after = `<div class="tables-grid">${table("Student_Club", ["StudentID","Club"], m.clubMembership, { fixed:[1], key:[0,1], wide:true })}</div>`;
-    return stage(index, "1NF", "One value per cell; one fact per row", lesson(before, "The Clubs cell contains a comma-separated list, so it is not atomic.", "(StudentID, Club) identifies one membership", "Create one row for each StudentID–Club pair.", after));
+    return stage(index, "1NF", "One value per cell; one fact per row", `<section class="lesson-step"><span class="phase-kicker solution">Atomic result</span><div class="transform-cue"><code>“${esc(m.unfStudents[0][2])}”</code><span aria-hidden="true">→</span><strong>two separate rows</strong></div>${after}<div class="compact-callout"><strong>What changed?</strong> Every cell is now atomic, and each row records one club membership.</div>${dependency("(StudentID, Club) identifies one membership")}</section>`);
   }
   if (index === 2) {
     const enrollment = m.enrollments.map(([id,course,,grade]) => [id,course,grade]);

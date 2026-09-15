@@ -69,6 +69,13 @@ h1 { margin: .55rem 0 .65rem; font-size: clamp(2.35rem, 4.4vw, 3.9rem); line-hei
 .phase-kicker { display: block; margin-bottom: .7rem; color: var(--mint); font-size: .72rem; font-weight: 820; letter-spacing: .1em; text-transform: uppercase; }
 .phase-kicker.problem { color: var(--coral); }
 .phase-kicker.solution { color: var(--mint); }
+.compact-callout { margin-top: .8rem; padding: .9rem 1rem; color: #4e5b6e; background: var(--good-bg); border-left: 3px solid var(--mint); border-radius: 0 .55rem .55rem 0; font-size: .9rem; }
+.compact-callout.problem { background: var(--bad-bg); border-left-color: var(--coral); }
+.compact-callout strong { color: var(--ink); }
+.transform-cue { display: flex; align-items: center; flex-wrap: wrap; gap: .65rem; margin-bottom: .8rem; padding: .75rem 1rem; color: var(--muted); background: var(--panel); border: 1px solid var(--line); border-radius: .65rem; font-size: .9rem; }
+.transform-cue code { color: var(--coral); }
+.transform-cue span { color: var(--mint); font-weight: 800; }
+.transform-cue strong { color: var(--ink); }
 .explain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0 0 1.2rem 100px; }
 .note { border: 1px solid var(--line); background: var(--panel); padding: 1rem 1.1rem; border-radius: .75rem; }
 .note.bad { border-top: 2px solid var(--coral); }
