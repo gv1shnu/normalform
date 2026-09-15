@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f7f9fc">
+  <meta name="description" content="An interactive, seeded walkthrough from unnormalized data to fifth normal form.">
+  <title>Normal Form — Database Normalization Visualiser</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%2308131f'/%3E%3Cellipse cx='32' cy='18' rx='19' ry='8' fill='%234ee1b2'/%3E%3Cpath d='M13 18v14c0 4 9 8 19 8s19-4 19-8V18M13 32v14c0 4 9 8 19 8s19-4 19-8V32' fill='none' stroke='%23f4f7f5' stroke-width='5'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#journey">Skip to visualiser</a>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Normal Form home">
+      <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span>Normal Form</span>
+    </a>
+    <div class="seed-tools" aria-label="Sample data controls">
+      <label for="seedInput">Seed</label>
+      <input id="seedInput" inputmode="numeric" value="240519" aria-describedby="seedHint">
+      <button class="button button-ghost" id="newSeed" type="button">New seed</button>
+      <span id="seedHint" class="sr-only">Enter a number and press Enter to regenerate sample values</span>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="intro" aria-labelledby="pageTitle">
+      <div class="eyebrow">Database normalization visualiser</div>
+      <h1 id="pageTitle">See normalization happen.</h1>
+      <p>Seven small examples show what each normal form fixes. Use Next step to reveal them in order.</p>
+      <div class="intro-meta" aria-label="Journey summary">
+        <span><b>7</b> normal forms</span>
+        <span><b>6</b> familiar examples</span>
+        <span><b>1</b> idea at a time</span>
+      </div>
+    </section>
+
+    <nav class="progress-shell" aria-label="Normalization progress">
+      <ol id="progress" class="progress-list"></ol>
+    </nav>
+
+    <section id="journey" class="journey" aria-live="polite" aria-label="Normalization stages"></section>
+
+    <div class="controls" aria-label="Journey controls">
+      <button id="backButton" class="button button-secondary" type="button">◂ Back</button>
+      <button id="resetButton" class="button button-ghost" type="button">Reset</button>
+      <button id="nextButton" class="button button-primary" type="button">Next step <span aria-hidden="true">▸</span></button>
+    </div>
+  </main>
+
+  <footer>
+    <span>Normal Form</span>
+    <span>A visual guide to better relational design.</span>
+  </footer>
+</body>
+</html>
