@@ -76,6 +76,10 @@ h1 { margin: .55rem 0 .65rem; font-size: clamp(2.35rem, 4.4vw, 3.9rem); line-hei
 .transform-cue code { color: var(--coral); }
 .transform-cue span { color: var(--mint); font-weight: 800; }
 .transform-cue strong { color: var(--ink); }
+.schema-strip { margin: .5rem 0 0 100px; padding: 1rem; background: #f0f4fa; border: 1px solid var(--line); border-radius: .75rem; }
+.schema-strip strong { display: block; margin-bottom: .65rem; color: var(--muted); font-size: .72rem; letter-spacing: .08em; text-transform: uppercase; }
+.schema-strip div { display: flex; flex-wrap: wrap; gap: .45rem; }
+.schema-strip code { padding: .32rem .5rem; color: #254f9f; background: white; border: 1px solid #ccd9ee; border-radius: .35rem; font-size: .72rem; }
 .explain-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 0 0 1.2rem 100px; }
 .note { border: 1px solid var(--line); background: var(--panel); padding: 1rem 1.1rem; border-radius: .75rem; }
 .note.bad { border-top: 2px solid var(--coral); }
@@ -135,7 +139,7 @@ footer { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 2rem 0 
   .stage { padding-bottom: 4rem; }
   .stage-head { grid-template-columns: 1fr; gap: .3rem; }
   .stage-number { font-size: .9rem; }
-  .explain-grid, .dependency, .tables-grid, .conclusion, .lesson-step { margin-left: 0; }
+  .explain-grid, .dependency, .tables-grid, .conclusion, .lesson-step, .schema-strip { margin-left: 0; }
   .explain-grid, .tables-grid, .conclusion { grid-template-columns: 1fr; }
   .table-card.wide, .denormalize { grid-column: auto; }
   .controls { width: 100%; justify-content: stretch; bottom: .6rem; }
