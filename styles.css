@@ -88,6 +88,15 @@ h1 { margin: .55rem 0 .65rem; font-size: clamp(2.35rem, 4.4vw, 3.9rem); line-hei
 .transform-cue code { color: var(--danger); }
 .transform-cue span { color: var(--accent); font-weight: 800; }
 .transform-cue strong { color: var(--ink); }
+.transform-cue-label { flex-basis: 100%; margin-bottom: .1rem; color: var(--accent); font-size: .7rem; font-weight: 820; letter-spacing: .1em; text-transform: uppercase; }
+.split-summary { display: flex; align-items: center; flex-wrap: wrap; gap: .6rem .9rem; margin: 0 0 1.4rem 100px; padding: .85rem 1.1rem; background: var(--accent-soft); border: 1px solid var(--line); border-left: 3px solid var(--accent); border-radius: 0 .7rem .7rem 0; }
+.split-summary-label { color: var(--accent); font-size: .7rem; font-weight: 820; letter-spacing: .1em; text-transform: uppercase; }
+.split-summary-flow { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; }
+.split-from { padding: .35rem .6rem; color: var(--danger); font-weight: 750; font-size: .9rem; background: var(--panel); border: 1px solid var(--line); border-radius: .45rem; }
+.split-arrow { color: var(--accent); font-weight: 800; }
+.split-targets { display: inline-flex; align-items: center; flex-wrap: wrap; gap: .4rem; }
+.split-into { padding: .35rem .6rem; color: var(--ink); font-weight: 750; font-size: .9rem; background: var(--panel); border: 1px solid var(--accent); border-radius: .45rem; }
+.split-plus { color: var(--muted); font-weight: 800; }
 .snapshot-head { display: flex; align-items: baseline; gap: .5rem .6rem; flex-wrap: wrap; margin: 0 0 .75rem; padding: 0 .2rem; }
 .snapshot-head h3 { margin: 0; color: var(--ink); font-size: .95rem; }
 .split-side.after .snapshot-head h3 { color: var(--accent); }
@@ -209,7 +218,7 @@ footer a { color: inherit; }
   .stage { padding-bottom: 4rem; }
   .stage-head { grid-template-columns: 1fr; gap: .3rem; }
   .stage-number { font-size: .9rem; }
-  .dependency, .tables-grid, .conclusion, .explain, .split-view, .handoff-note, .tradeoff-note, .contrast-note, .contrast-hint { margin-left: 0; }
+  .dependency, .tables-grid, .conclusion, .explain, .split-view, .split-summary, .handoff-note, .tradeoff-note, .contrast-note, .contrast-hint { margin-left: 0; }
   .tables-grid, .conclusion, .explain, .split-view, .contrast-grid { grid-template-columns: 1fr; }
   .table-card.wide, .denormalize { grid-column: auto; }
   .explain { gap: .8rem; margin-bottom: 1.1rem; }
