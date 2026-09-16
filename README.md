@@ -1,6 +1,6 @@
 # Database Normalization Visualiser
 
-An interactive, single-page walkthrough that carries one Campus Connect student database from UNF through 5NF. Every stage shows the complete input and outcome database, and each outcome becomes the next stage’s exact input. The app includes seeded sample data, highlighted dependencies, explicit primary-key labels, responsive HTML tables, and keyboard-friendly controls.
+An interactive, single-page walkthrough that takes one student database from a messy spreadsheet (UNF) to a clean design (5NF), one step at a time. Each step shows the data **before** and **after** side by side, and every result becomes the next step's input. The app includes seeded sample data, highlighted dependencies, explicit primary-key labels, responsive HTML tables, and keyboard-friendly controls.
 
 ## Run locally
 
