@@ -84,32 +84,77 @@ function esc(value) {
   return String(value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;" }[char]));
 }
 
+const GLOSSARY = {
+  fact: { term: "Fact", body: `A single true statement about one thing &mdash; for example, &ldquo;student S101 is named Nora Diaz.&rdquo; The 1NF rule <b>one value per cell, one fact per row</b> means never packing several facts into the same cell or row.` },
+  dependency: { term: "Dependency", body: `A rule that one value decides another, written <b>X &rarr; Y</b> (&ldquo;X determines Y&rdquo;) &mdash; for example <code>StudentID &rarr; StudentName</code>. Two looser forms appear later: <b>&#8608;</b> a multivalued dependency (one value maps to a whole set), and <b>&#8904;</b> a join dependency (the data only survives when the split tables are joined back together).` }
+};
+
+function termTag(key, extraClass = "") {
+  const g = GLOSSARY[key];
+  return `<button type="button" class="term ${extraClass}" aria-expanded="false"><span class="term-label">${esc(g.term)}</span><span class="term-badge" aria-hidden="true">i</span><span class="term-pop" role="tooltip"><b class="term-pop-title">${esc(g.term)}</b>${g.body}</span></button>`;
+}
+
+// A column is a foreign key only when the entity table it references is actually
+// present in the same snapshot. The value tables (Hobby, Language, Club, Event)
+// never own a table, so those key columns are always plain composite-key columns.
+const FK_OWNERS = { StudentID: ["Student", "Student_Profile_2NF"], DeptID: ["Department"], CourseID: ["Course"], TutorID: ["Tutor_Course"] };
+
+function foreignKeys(spec, state) {
+  const present = new Set(state.map((table) => table.title));
+  const fks = {};
+  spec.columns.forEach((column, index) => {
+    const owners = FK_OWNERS[column];
+    if (!owners) return;
+    const target = owners.find((title) => title !== spec.title && present.has(title));
+    if (target) fks[index] = target;
+  });
+  return fks;
+}
+
 function table(title, columns, rows, options = {}) {
   const bad = options.bad || [];
   const fixed = options.fixed || [];
   const key = options.key || [];
+  const fk = options.fk || {};
+  const cellClass = (index) => `${bad.includes(index) ? "offending" : ""} ${fixed.includes(index) ? "fixed" : ""} ${key.includes(index) ? "key" : ""} ${fk[index] ? "fk" : ""}`;
   const header = columns.map((column, index) => {
-    const label = key.includes(index) && !column.includes("(PK)") ? `${column} (PK)` : column;
-    return `<th class="${bad.includes(index) ? "offending" : ""} ${fixed.includes(index) ? "fixed" : ""} ${key.includes(index) ? "key" : ""}">${esc(label)}</th>`;
+    const roles = `${key.includes(index) ? `<span class="col-role pk">PK</span>` : ""}${fk[index] ? `<span class="col-role fkref">FK → ${esc(fk[index])}</span>` : ""}`;
+    return `<th class="${cellClass(index)}"><span class="col-name">${esc(column)}</span>${roles ? `<span class="col-roles">${roles}</span>` : ""}</th>`;
   }).join("");
-  const body = rows.map((row) => `<tr>${row.map((cell, index) => `<td class="${bad.includes(index) ? "offending" : ""} ${fixed.includes(index) ? "fixed" : ""} ${key.includes(index) ? "key" : ""}">${esc(cell)}</td>`).join("")}</tr>`).join("");
+  const body = rows.map((row) => `<tr>${row.map((cell, index) => `<td class="${cellClass(index)}">${esc(cell)}</td>`).join("")}</tr>`).join("");
   const statusClass = options.status ? String(options.status).toLowerCase().replace(/[^a-z0-9]+/g, "-") : "";
   const status = options.status ? `<b class="table-status ${statusClass}">${esc(options.status)}</b> · ` : "";
-  return `<article class="table-card ${options.wide ? "wide" : ""} ${statusClass ? `status-${statusClass}` : ""}" data-table="${esc(title)}"><div class="table-title"><h3>${esc(title)}</h3><span>${status}${rows.length} rows</span></div><div class="table-scroll"><table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table></div></article>`;
+  const meta = `${status}${rows.length} rows`;
+  const classes = `table-card ${options.wide ? "wide" : ""} ${statusClass ? `status-${statusClass}` : ""}`;
+  const grid = `<div class="table-scroll"><table><thead><tr>${header}</tr></thead><tbody>${body}</tbody></table></div>`;
+  if (options.collapsible) {
+    return `<details class="${classes} collapsible" data-table="${esc(title)}"><summary class="table-title"><h3>${esc(title)}</h3><span class="table-meta">${meta}</span><span class="expand-toggle" aria-hidden="true"><span class="expand-caret"></span></span></summary>${grid}</details>`;
+  }
+  return `<article class="${classes}" data-table="${esc(title)}"><div class="table-title"><h3>${esc(title)}</h3><span>${meta}</span></div>${grid}</article>`;
 }
 
 function dependency(value) {
-  return `<div class="dependency"><strong>Dependency</strong><code>${esc(value)}</code></div>`;
+  return `<div class="dependency">${termTag("dependency", "term-mini")}<code>${esc(value)}</code></div>`;
 }
 
 function renderMoveCue(moves) {
   return `<div class="transform-cue" aria-label="Attribute movement">${moves.map(({ from, to }) => `<div class="move-item"><code>${esc(from)}</code><span aria-hidden="true">→</span><strong>${esc(to)}</strong></div>`).join("")}</div>`;
 }
 
-function lesson(before, wrong, dependencyText, fix, after = "", moves = []) {
-  return `<section class="lesson-step"><span class="phase-kicker">1 · Start with the table</span>${before}</section>
-    <section class="lesson-step"><span class="phase-kicker problem">2 · What is wrong</span><div class="note bad"><p>${wrong}</p></div>${dependency(dependencyText)}</section>
-    <section class="lesson-step"><span class="phase-kicker solution">3 · What to change</span><div class="note good"><p>${fix}</p></div>${renderMoveCue(moves)}${after}</section>`;
+function renderSplit(inputState, outcomeState, index, config) {
+  const before = renderSnapshot(inputState, "Before", { mode:"input", badByTable:config.bad, stacked:true, sub:`Coming from ${FORMS[index - 1]}` });
+  const after = renderSnapshot(outcomeState, "After", { mode:"outcome", changed:config.changed, stacked:true, sub:`${FORMS[index]} applied` });
+  return `<div class="split-view">
+    <section class="split-side before" aria-label="Before this step">${before}</section>
+    <section class="split-side after" aria-label="After this step">${after}</section>
+  </div>`;
+}
+
+function explain(config) {
+  return `<div class="explain">
+    <section class="explain-block problem"><span class="phase-kicker problem">The problem</span><div class="note bad"><p>${config.wrong}</p></div>${dependency(config.dependency)}</section>
+    <section class="explain-block solution"><span class="phase-kicker solution">The fix</span><div class="note good"><p>${config.fix}</p></div>${renderMoveCue(config.moves)}</section>
+  </div>`;
 }
 
 function stage(index, title, rule, content) {
@@ -156,41 +201,60 @@ function renderSnapshot(state, label, options = {}) {
   const changed = options.changed || [];
   const badByTable = options.badByTable || {};
   const mode = options.mode || "input";
-  const cards = state.map((spec) => table(spec.title, spec.columns, spec.rows, {
-    key: spec.key,
-    wide: spec.wide,
-    bad: badByTable[spec.title] || [],
-    fixed: changed.includes(spec.title) ? spec.fixed : [],
-    status: mode === "input" ? "input" : changed.includes(spec.title) ? "updated" : "carried forward"
-  })).join("");
-  return `<div class="snapshot" data-snapshot="${esc(mode)}"><div class="snapshot-head"><h3>${esc(label)}</h3><span>${state.length} ${state.length === 1 ? "table" : "tables"}</span></div><div class="tables-grid">${cards}</div></div>`;
+  const cards = state.map((spec) => {
+    const focus = mode === "input" ? Boolean(badByTable[spec.title]) : changed.includes(spec.title);
+    return table(spec.title, spec.columns, spec.rows, {
+      key: spec.key,
+      wide: spec.wide,
+      bad: badByTable[spec.title] || [],
+      fixed: changed.includes(spec.title) ? spec.fixed : [],
+      status: mode === "input" ? (focus ? "input" : "carried forward") : (focus ? "updated" : "carried forward"),
+      collapsible: !focus,
+      fk: foreignKeys(spec, state)
+    });
+  }).join("");
+  const gridClass = options.stacked ? "tables-grid stacked" : "tables-grid";
+  const sub = options.sub ? `<span class="snapshot-sub">${esc(options.sub)}</span>` : "";
+  return `<div class="snapshot" data-snapshot="${esc(mode)}"><div class="snapshot-head"><h3>${esc(label)}</h3>${sub}<span>${state.length} ${state.length === 1 ? "table" : "tables"}</span></div><div class="${gridClass}">${cards}</div></div>`;
+}
+
+function renderForwardHint() {
+  return `<aside class="contrast-hint">Coming up: <code>Student_Club_Event</code> at 5NF looks exactly like this table — three columns, all part of the key — but it <b>cannot</b> be split into two, because a third relationship links its columns. That gap is the whole reason 5NF exists.</aside>`;
+}
+
+function renderContrastNote(m) {
+  const twoWay = m.studentClub.flatMap(([student, club]) => m.studentEvent.filter(([id]) => id === student).map(([, event]) => [student, club, event]));
+  const real = new Set(m.participation.map((row) => JSON.stringify(row)));
+  const phantom = twoWay.find((row) => !real.has(JSON.stringify(row)));
+  const example = phantom ? `<p class="contrast-example"><b>See it in the data:</b> joining only <code>Student_Club</code> and <code>Student_Event</code> would invent <b>${esc(phantom[0])} · ${esc(phantom[1])} · ${esc(phantom[2])}</b> — but that row never happened, because <b>${esc(phantom[1])}</b> does not attend <b>${esc(phantom[2])}</b> (that pair is not in <code>Club_Event</code>). The third table filters it out.</p>` : "";
+  return `<aside class="contrast-note" aria-label="Why 5NF differs from 4NF"><h3>Why isn&rsquo;t this the same as the 4NF table?</h3><p><code>Student_Club_Event</code> looks identical to <code>Student_Hobby_Language</code> from 4NF — same three columns, all part of the key. The difference is the data inside.</p><div class="contrast-grid"><div><span class="contrast-tag good">4NF · independent columns</span><p>Hobbies and languages are unrelated, so that table held <b>every</b> hobby-language pairing. Two tables rebuild it: <code>Student_Hobby ⋈ Student_Language</code>.</p></div><div><span class="contrast-tag warn">5NF · linked columns</span><p>A third fact &mdash; <code>Club_Event</code>, which clubs attend which events &mdash; limits the combinations, so this is <b>not</b> every pairing. Only the three-way join rebuilds it.</p></div></div>${example}</aside>`;
 }
 
 function renderStage(index) {
   const m = model;
   const states = databaseStates(m);
   if (index === 0) {
-    const current = renderSnapshot(states[0], "Starting database", { mode:"input", badByTable:{ Campus_Workbook:[3,4,5,6] } });
-    return stage(index, "UNF", "The Campus Connect starting spreadsheet", `<section class="lesson-step"><span class="phase-kicker problem">Current state</span>${current}<div class="compact-callout problem"><strong>Why unnormalized?</strong> Courses with tutors, hobbies, languages, and club events are repeating groups. Department and tutor facts are already present—they are only packed into messy cells.</div>${dependency("StudentID → {Courses with tutors, Hobbies, Languages, Club events}")}<div class="handoff-note">This exact database is the input to 1NF.</div></section>`);
+    const current = renderSnapshot(states[0], "Starting point", { mode:"input", badByTable:{ Campus_Workbook:[3,4,5,6] }, stacked:true, sub:"One big spreadsheet" });
+    return stage(index, "UNF", "Where we start: one messy spreadsheet", `<div class="explain single"><section class="explain-block problem"><span class="phase-kicker problem">Why it's messy</span><div class="note bad"><p>Some columns cram a whole list into a single cell — courses, hobbies, languages, and club events. Nothing is missing; it's just packed together, so you can't work with one fact on its own.</p></div>${dependency("One StudentID → many courses, hobbies, languages, and events")}</section></div><div class="split-view single"><section class="split-side before" aria-label="Starting database">${current}</section></div><div class="handoff-note">This spreadsheet is the input for 1NF.</div>`);
   }
   const transforms = [
     null,
-    { bad:{ Campus_Workbook:[3,4,5,6] }, changed:["Campus_Record_1NF","Student_Hobby_Language","Student_Club_Event"], wrong:"Repeating groups place several values in one cell, so individual facts cannot be keyed or constrained.", dependency:"StudentID → {Courses with tutors, Hobbies, Languages, Club events}", fix:"Expand every list into atomic relations. Department and tutor values are unpacked from facts already visible in UNF.", moves:[{from:"Courses + grade + tutor",to:"Campus_Record_1NF"},{from:"Hobbies + Languages",to:"Student_Hobby_Language"},{from:"Club events",to:"Student_Club_Event"}] },
-    { bad:{ Campus_Record_1NF:[1,2,3,5] }, changed:["Student_Profile_2NF","Course","Enrollment_2NF"], wrong:"Student details depend only on StudentID. CourseName depends only on CourseID. Both repeat inside a relation whose primary key has two columns.", dependency:"StudentID → StudentName, DeptID · CourseID → CourseName", fix:"Move student facts to Student_Profile_2NF and course facts to Course. Carry the two activity relations forward untouched.", moves:[{from:"StudentName, DeptID, DeptName",to:"Student_Profile_2NF"},{from:"CourseName",to:"Course"},{from:"Grade, TutorID",to:"Enrollment_2NF"}] },
-    { bad:{ Student_Profile_2NF:[3] }, changed:["Student","Department"], wrong:"DeptName depends on DeptID, not directly on StudentID. It repeats for every student in the same department.", dependency:"StudentID → DeptID → DeptName", fix:"Replace Student_Profile_2NF with Student and Department. Every other table is carried forward untouched.", moves:[{from:"StudentName, DeptID",to:"Student"},{from:"DeptName",to:"Department"}] },
-    { bad:{ Enrollment_2NF:[1,3] }, changed:["Tutor_Course","Student_Tutor_Grade"], wrong:"TutorID determines CourseID, but TutorID is not a superkey of Enrollment_2NF because one tutor helps several students.", dependency:"TutorID → CourseID (TutorID is not a superkey)", fix:"Replace Enrollment_2NF with Tutor_Course and Student_Tutor_Grade. All other tables remain untouched.", moves:[{from:"TutorID, CourseID",to:"Tutor_Course"},{from:"StudentID, TutorID, Grade",to:"Student_Tutor_Grade"}], extra:"BCNF trade-off: (StudentID, CourseID) → TutorID is no longer enforceable inside a single table after this split." },
-    { bad:{ Student_Hobby_Language:[1,2] }, changed:["Student_Hobby","Student_Language"], wrong:"A student’s hobbies do not depend on the languages they speak. Combining both sets creates every possible pairing.", dependency:"StudentID ↠ Hobby · StudentID ↠ Language", fix:"Replace Student_Hobby_Language with Student_Hobby and Student_Language. Carry every other table forward untouched.", moves:[{from:"Hobby",to:"Student_Hobby"},{from:"Language",to:"Student_Language"}] },
-    { bad:{ Student_Club_Event:[0,1,2] }, changed:["Student_Club","Student_Event","Club_Event"], wrong:"Any two pairwise facts are insufficient: joining only Student_Club and Student_Event invents a club–event participation that never happened.", dependency:"⋈ {Student_Club, Student_Event, Club_Event} = Student_Club_Event", fix:"Keep all three projections. Only their three-way natural join removes the spurious pairing and recreates the original relation exactly.", moves:[{from:"StudentID + Club",to:"Student_Club"},{from:"StudentID + Event",to:"Student_Event"},{from:"Club + Event",to:"Club_Event"}] }
+    { bad:{ Campus_Workbook:[3,4,5,6] }, changed:["Campus_Record_1NF","Student_Hobby_Language","Student_Club_Event"], wrong:"Some cells hold a whole list of values. When many facts share one cell, you can't reliably find, update, or check any single one of them.", dependency:"One StudentID → many courses, hobbies, languages, and events", fix:"Give every value its own row and cell, so each row states one plain fact. The messy lists become separate tables.", moves:[{from:"Courses + grade + tutor",to:"Campus_Record_1NF"},{from:"Hobbies + Languages",to:"Student_Hobby_Language"},{from:"Club events",to:"Student_Club_Event"}] },
+    { bad:{ Campus_Record_1NF:[1,2,3,5] }, changed:["Student_Profile_2NF","Course","Enrollment_2NF"], wrong:"The key here is StudentID and CourseID together. But a student's name depends on StudentID alone, and a course's name on CourseID alone — so those details repeat on every row.", dependency:"StudentID → StudentName, DeptID · CourseID → CourseName", fix:"Split off the parts that depend on only half the key: student details into one table, course details into another.", moves:[{from:"StudentName, DeptID, DeptName",to:"Student_Profile_2NF"},{from:"CourseName",to:"Course"},{from:"Grade, TutorID",to:"Enrollment_2NF"}] },
+    { bad:{ Student_Profile_2NF:[3] }, changed:["Student","Department"], wrong:"A department's name really belongs to the department, not the student. So it gets repeated for every student in the same department.", dependency:"StudentID → DeptID → DeptName", fix:"Give departments their own table, and point each student at it by ID.", moves:[{from:"StudentName, DeptID",to:"Student"},{from:"DeptName",to:"Department"}] },
+    { bad:{ Enrollment_2NF:[1,3] }, changed:["Tutor_Course","Student_Tutor_Grade"], wrong:"Each tutor teaches one course, so the tutor decides the course. But the tutor isn't this table's key, so the course repeats for every student that tutor helps.", dependency:"TutorID → CourseID, but TutorID isn't the key", fix:"Store each tutor's course once in its own table, and keep only student, tutor, and grade together.", moves:[{from:"TutorID, CourseID",to:"Tutor_Course"},{from:"StudentID, TutorID, Grade",to:"Student_Tutor_Grade"}], extra:"Trade-off: after this split, no single table can enforce that a student takes each course with just one tutor." },
+    { bad:{ Student_Hobby_Language:[1,2] }, changed:["Student_Hobby","Student_Language"], wrong:"Hobbies and languages have nothing to do with each other. Keeping them in one table pairs every hobby with every language — rows that don't mean anything.", dependency:"StudentID ↠ Hobby · StudentID ↠ Language", fix:"Give hobbies and languages their own separate tables, one fact each.", moves:[{from:"Hobby",to:"Student_Hobby"},{from:"Language",to:"Student_Language"}] },
+    { bad:{ Student_Club_Event:[0,1,2] }, changed:["Student_Club","Student_Event","Club_Event"], wrong:"Two of the pairings aren't enough. Joining just student-club with student-event invents club-at-event combinations that never actually happened.", dependency:"join {Student_Club, Student_Event, Club_Event} = Student_Club_Event", fix:"Keep all three pair tables. Only joining all three together rebuilds the real data without inventing extra rows.", moves:[{from:"StudentID + Club",to:"Student_Club"},{from:"StudentID + Event",to:"Student_Event"},{from:"Club + Event",to:"Club_Event"}] }
   ];
   const config = transforms[index];
-  const input = renderSnapshot(states[index - 1], `Input from ${FORMS[index - 1]}`, { mode:"input", badByTable:config.bad });
-  const outcome = renderSnapshot(states[index], `${FORMS[index]} outcome — complete database`, { mode:"outcome", changed:config.changed });
-  const rules = ["", "One value per cell; one fact per row", "Remove dependencies on part of a composite key", "Remove dependencies between non-key columns", "Every determinant must be a candidate key", "Separate independent multivalued facts", "Separate facts implied by three smaller pairings"];
-  const conclusion = `<section class="conclusion" aria-label="Conclusion"><article class="conclusion-card pro"><h3>What full normalization buys</h3><ul><li>Far less duplicate data</li><li>Fewer update, insert, and delete anomalies</li><li>Clearer integrity constraints</li></ul></article><article class="conclusion-card con"><h3>What it costs</h3><ul><li>More tables to understand</li><li>More joins and query complexity</li><li>Possible read-performance overhead</li></ul></article><aside class="denormalize"><h3>When to step back</h3><p>5NF is valuable when genuine join dependencies exist; for most systems, 3NF or BCNF is the pragmatic finish line. Denormalize deliberately for measured, read-heavy bottlenecks—keep a canonical normalized source and make duplicated values explicit and testable.</p></aside></section>`;
+  const split = renderSplit(states[index - 1], states[index], index, config);
+  const rules = ["", "One value per cell, one fact per row", "Split off columns that depend on only part of the key", "Move facts that belong to another thing into their own table", "Anything that decides a column should be a key", "Separate two lists that don't relate to each other", "Split into three pair tables that only rejoin correctly together"];
+  const conclusion = `<section class="conclusion" aria-label="Conclusion"><article class="conclusion-card pro"><h3>What you gain</h3><ul><li>Much less repeated data</li><li>Fewer ways for edits to go wrong</li><li>Rules that are easy to enforce</li></ul></article><article class="conclusion-card con"><h3>What it costs</h3><ul><li>More tables to keep track of</li><li>Queries need more joins</li><li>Reads can get a little slower</li></ul></article><aside class="denormalize"><h3>When to stop</h3><p>Full 5NF is rarely needed. For most apps, 3NF or BCNF is a good place to stop. If reads get slow, you can add some duplication back on purpose — just keep one clean source of truth and know exactly where you copied data.</p></aside></section>`;
   const tradeoff = config.extra ? `<aside class="tradeoff-note">${esc(config.extra)}</aside>` : "";
-  const handoff = `<div class="handoff-note">This complete outcome is the exact input to ${index === 6 ? "the finished schema" : FORMS[index + 1]}.</div>`;
-  const ending = index === 6 ? `<header class="stage-head conclusion-head"><span class="stage-number">08</span><h2>Conclusion<span class="stage-rule">Normalize for integrity; denormalize with evidence.</span></h2></header>${conclusion}` : "";
-  return stage(index, FORMS[index], rules[index], `${lesson(input, config.wrong, config.dependency, config.fix, outcome, config.moves)}${tradeoff}${handoff}${ending}`);
+  const contrast = index === 5 ? renderForwardHint() : index === 6 ? renderContrastNote(m) : "";
+  const handoff = `<div class="handoff-note">This result becomes the input for ${index === 6 ? "the finished design" : FORMS[index + 1]}.</div>`;
+  const ending = index === 6 ? `<header class="stage-head conclusion-head"><span class="stage-number">08</span><h2>Conclusion<span class="stage-rule">Normalize for a clean design; add duplication back only when you have a reason.</span></h2></header>${conclusion}` : "";
+  return stage(index, FORMS[index], rules[index], `${explain(config)}${split}${contrast}${tradeoff}${handoff}${ending}`);
 }
 
 function buildProgress() {
@@ -251,6 +315,24 @@ resetButton.addEventListener("click", () => { regenerate(seed); document.querySe
 document.querySelector("#newSeed").addEventListener("click", () => regenerate(Math.floor(Date.now() % 1000000)));
 seedInput.addEventListener("change", () => regenerate(seedInput.value.trim() || DEFAULT_SEED));
 seedInput.addEventListener("keydown", (event) => { if (event.key === "Enter") { event.preventDefault(); regenerate(seedInput.value.trim() || DEFAULT_SEED); } });
+
+const glossaryHost = document.querySelector("#glossary");
+if (glossaryHost) glossaryHost.innerHTML = `<span class="glossary-label">Glossary</span>${termTag("fact")}${termTag("dependency")}`;
+
+if (typeof document.addEventListener === "function") {
+  const closeTerms = (except) => document.querySelectorAll(".term[aria-expanded='true']").forEach((button) => { if (button !== except) button.setAttribute("aria-expanded", "false"); });
+  document.addEventListener("click", (event) => {
+    const term = event.target.closest && event.target.closest(".term");
+    if (term) {
+      const open = term.getAttribute("aria-expanded") === "true";
+      closeTerms(term);
+      term.setAttribute("aria-expanded", open ? "false" : "true");
+      return;
+    }
+    closeTerms(null);
+  });
+  document.addEventListener("keydown", (event) => { if (event.key === "Escape") closeTerms(null); });
+}
 
 buildProgress();
 regenerate(DEFAULT_SEED);
